@@ -25,3 +25,11 @@ In `experts/`, the provided expert policies are:
 * Walker2d-v2.pkl
 
 The name of the pickle file corresponds to the name of the gym environment.
+
+# Run experiment
+
+1. `export LD_PRELOAD=/usr/lib/x86_64-linux-gnu/libGLEW.so`
+2. `mkdir expert_data`
+3. `./demo.bash` # collect data
+4. `./runall.sh` # run 6 envs in both bc & da
+5. `./draw.py` # gen required plots

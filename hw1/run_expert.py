@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 
 """
 Code to load an expert policy and generate roll-out data for behavioral cloning.
@@ -32,7 +32,9 @@ def main():
     policy_fn = load_policy.load_policy(args.expert_policy_file)
     print('loaded and built')
 
-    with tf.Session():
+    config = tf.ConfigProto()
+    config.gpu_options.allow_growth = True
+    with tf.Session(config=config):
         tf_util.initialize()
 
         import gym
@@ -42,8 +44,11 @@ def main():
         returns = []
         observations = []
         actions = []
-        for i in range(args.num_rollouts):
+        i = 0
+        while len(observations) < args.num_rollouts:
+        # for i in range(args.num_rollouts):
             print('iter', i)
+            i += 1
             obs = env.reset()
             done = False
             totalr = 0.
@@ -57,7 +62,7 @@ def main():
                 steps += 1
                 if args.render:
                     env.render()
-                if steps % 100 == 0: print("%i/%i"%(steps, max_steps))
+                # if steps % 100 == 0: print("%i/%i"%(steps, max_steps))
                 if steps >= max_steps:
                     break
             returns.append(totalr)
