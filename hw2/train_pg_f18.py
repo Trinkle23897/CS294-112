@@ -214,7 +214,8 @@ class Agent(object):
         else:
             sy_mean, sy_logstd = policy_parameters
             # YOUR_CODE_HERE
-            sy_logprob_n = tf.contrib.distributions.MultivariateNormalDiag(loc=sy_mean, scale_diag=tf.exp(sy_logstd)).log_prob(sy_ac_na)
+            # sy_logprob_n = -tf.contrib.distributions.MultivariateNormalDiag(loc=sy_mean, scale_diag=tf.exp(sy_logstd)).log_prob(sy_ac_na)
+            sy_logprob_n = -tf.reduce_sum(tf.square((sy_ac_na - sy_mean) / tf.exp(sy_logstd)), axis = 1) / 2
         return sy_logprob_n
 
     def build_computation_graph(self):
