@@ -2,7 +2,7 @@ import argparse
 import gym
 from gym import wrappers
 import os.path as osp
-import random
+import random, sys
 import numpy as np
 import tensorflow as tf
 import tensorflow.contrib.layers as layers
@@ -70,7 +70,8 @@ def atari_learn(env,
         learning_freq=4,
         frame_history_len=1,
         target_update_freq=10000,
-        grad_norm_clipping=10
+        grad_norm_clipping=10,
+        rew_file=sys.argv[-1] + '.pkl'
     )
     env.close()
 
@@ -94,12 +95,13 @@ def get_session():
     tf_config = tf.ConfigProto(
         inter_op_parallelism_threads=1,
         intra_op_parallelism_threads=1)
+    tf_config.gpu_options.allow_growth = True
     session = tf.Session(config=tf_config)
     print("AVAILABLE GPUS: ", get_available_gpus())
     return session
 
 def get_env(seed):
-    env = gym.make('Pong-ram-v0')
+    env = gym.make(sys.argv[-1]) # 'Pong-ram-v0'
 
     set_global_seeds(seed)
     env.seed(seed)

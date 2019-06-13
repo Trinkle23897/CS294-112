@@ -12,6 +12,7 @@ Keras-Preprocessing==1.0.9
 matplotlib==3.0.3
 mujoco-py==2.0.2.2
 numpy==1.16.4
+opencv-python==4.1.0.25
 pandas==0.24.2
 scipy==1.3.0
 seaborn==0.9.0

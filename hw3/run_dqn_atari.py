@@ -2,7 +2,7 @@ import argparse
 import gym
 from gym import wrappers
 import os.path as osp
-import random
+import random, sys
 import numpy as np
 import tensorflow as tf
 import tensorflow.contrib.layers as layers
@@ -16,13 +16,14 @@ def atari_model(img_in, num_actions, scope, reuse=False):
     # as described in https://storage.googleapis.com/deepmind-data/assets/papers/DeepMindNature14236Paper.pdf
     with tf.variable_scope(scope, reuse=reuse):
         out = img_in
-        with tf.variable_scope("convnet"):
-            # original architecture
-            out = layers.convolution2d(out, num_outputs=32, kernel_size=8, stride=4, activation_fn=tf.nn.relu)
-            out = layers.convolution2d(out, num_outputs=64, kernel_size=4, stride=2, activation_fn=tf.nn.relu)
-            out = layers.convolution2d(out, num_outputs=64, kernel_size=3, stride=1, activation_fn=tf.nn.relu)
+        # with tf.variable_scope("convnet"):
+        #     # original architecture
+        #     out = layers.convolution2d(out, num_outputs=32, kernel_size=8, stride=4, activation_fn=tf.nn.relu)
+        #     out = layers.convolution2d(out, num_outputs=64, kernel_size=4, stride=2, activation_fn=tf.nn.relu)
+        #     out = layers.convolution2d(out, num_outputs=64, kernel_size=3, stride=1, activation_fn=tf.nn.relu)
         out = layers.flatten(out)
         with tf.variable_scope("action_value"):
+            out = layers.fully_connected(out, num_outputs=512,         activation_fn=tf.nn.relu)
             out = layers.fully_connected(out, num_outputs=512,         activation_fn=tf.nn.relu)
             out = layers.fully_connected(out, num_outputs=num_actions, activation_fn=None)
 
@@ -75,7 +76,8 @@ def atari_learn(env,
         frame_history_len=4,
         target_update_freq=10000,
         grad_norm_clipping=10,
-        double_q=True
+        double_q=True,
+        rew_file=sys.argv[-1] + '.pkl'
     )
     env.close()
 
@@ -99,6 +101,7 @@ def get_session():
     tf_config = tf.ConfigProto(
         inter_op_parallelism_threads=1,
         intra_op_parallelism_threads=1)
+    tf_config.gpu_options.allow_growth = True
     session = tf.Session(config=tf_config)
     print("AVAILABLE GPUS: ", get_available_gpus())
     return session
@@ -117,7 +120,7 @@ def get_env(task, seed):
 
 def main():
     # Get Atari games.
-    task = gym.make('PongNoFrameskip-v4')
+    task = gym.make(sys.argv[-1]) # 'PongNoFrameskip-v4'
 
     # Run training
     seed = random.randint(0, 9999)

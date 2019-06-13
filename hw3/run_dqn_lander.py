@@ -54,7 +54,8 @@ def lander_kwargs():
         'frame_history_len': 1,
         'target_update_freq': 3000,
         'grad_norm_clipping': 10,
-        'lander': True
+        'lander': True,
+        'rew_file': 'll.pkl'
     }
 
 def lander_learn(env,
@@ -87,6 +88,7 @@ def get_session():
         inter_op_parallelism_threads=1,
         intra_op_parallelism_threads=1,
         device_count={'GPU': 0})
+    tf_config.gpu_options.allow_growth = True
     # GPUs don't significantly speed up deep Q-learning for lunar lander,
     # since the observations are low-dimensional
     session = tf.Session(config=tf_config)
@@ -99,7 +101,7 @@ def get_env(seed):
     env.seed(seed)
 
     expt_dir = '/tmp/hw3_vid_dir/'
-    env = wrappers.Monitor(env, osp.join(expt_dir, "gym"), force=True)
+    env = wrappers.Monitor(env, osp.join(expt_dir, "gym"), force=True, video_callable=False)
 
     return env
 
