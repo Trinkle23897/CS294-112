@@ -11,6 +11,11 @@ import dqn
 from dqn_utils import *
 from atari_wrappers import *
 
+import argparse
+parser = argparse.ArgumentParser()
+parser.add_argument('envname', type=str)
+parser.add_argument('--double', action='store_true')
+args = parser.parse_args()
 
 def atari_model(img_in, num_actions, scope, reuse=False):
     # as described in https://storage.googleapis.com/deepmind-data/assets/papers/DeepMindNature14236Paper.pdf
@@ -76,8 +81,8 @@ def atari_learn(env,
         frame_history_len=4,
         target_update_freq=10000,
         grad_norm_clipping=10,
-        double_q=True,
-        rew_file=sys.argv[-1] + '.pkl'
+        double_q=args.double,
+        rew_file=args.envname + '.pkl'
     )
     env.close()
 
@@ -107,7 +112,7 @@ def get_session():
     return session
 
 def get_env(task, seed):
-    env = gym.make('PongNoFrameskip-v4')
+    env = gym.make(args.envname)
 
     set_global_seeds(seed)
     env.seed(seed)
@@ -120,7 +125,7 @@ def get_env(task, seed):
 
 def main():
     # Get Atari games.
-    task = gym.make(sys.argv[-1]) # 'PongNoFrameskip-v4'
+    task = gym.make(args.envname) # 'PongNoFrameskip-v4'
 
     # Run training
     seed = random.randint(0, 9999)

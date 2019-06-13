@@ -99,8 +99,10 @@ class QLearner(object):
 		self.env = env
 		self.session = session
 		self.exploration = exploration
+		if not os.path.exists('data'):
+			os.makedirs('data')
 		self.rew_file = os.path.join('data', ('double_' if double_q else 'vanilla_') + rew_file)
-
+		print(f'Save logs to {self.rew_file}')
 		###############
 		# BUILD MODEL #
 		###############
