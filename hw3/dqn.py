@@ -201,6 +201,8 @@ class QLearner(object):
 
 		self.start_time = None
 		self.t = 0
+		self.log_time = []
+		self.log_rew = []
 
 	def stopping_criterion_met(self):
 		return self.stopping_criterion is not None and self.stopping_criterion(self.env, self.t)
@@ -337,9 +339,11 @@ class QLearner(object):
 			self.start_time = time.time()
 
 			sys.stdout.flush()
+			self.log_time.append(self.t)
+			self.log_rew.append(self.mean_episode_reward)
 
 			with open(self.rew_file, 'wb') as f:
-				pickle.dump(episode_rewards, f, pickle.HIGHEST_PROTOCOL)
+				pickle.dump({'time': np.array(self.log_time), 'reward': np.array(self.log_rew), 'detail': np.array(episode_rewards)}, f, pickle.HIGHEST_PROTOCOL)
 
 def learn(*args, **kwargs):
 	alg = QLearner(*args, **kwargs)
