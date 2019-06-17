@@ -75,6 +75,10 @@ def build_rnn(x, h, output_size, scope, n_layers, size, activation=tf.tanh, outp
     #                           ----------PROBLEM 2----------
     #====================================================================================#
     # YOUR CODE HERE
+    mlp = build_mlp(x, output_size, scope, n_layers, size, activation, output_activation, regularizer)
+    gru = tf.nn.rnn_cell.GRUCell(output_size, activation=activation)
+    x, h = tf.nn.dynamic_rnn(gru, initial_state=h)
+    return x[:, -1], h
 
 def build_policy(x, h, output_size, scope, n_layers, size, gru_size, recurrent=True, activation=tf.tanh, output_activation=None):
     """
@@ -168,6 +172,8 @@ class Agent(object):
         self.animate = sample_trajectory_args['animate']
         self.max_path_length = sample_trajectory_args['max_path_length']
         self.min_timesteps_per_batch = sample_trajectory_args['min_timesteps_per_batch']
+        self.generalized = sample_trajectory_args['generalized']
+        self.granularity = sample_trajectory_args['granularity']
 
         self.gamma = estimate_return_args['gamma']
         self.nn_critic = estimate_return_args['nn_critic']
@@ -355,7 +361,7 @@ class Agent(object):
             animate_this_episode: if True then render
             val: whether this is training or evaluation
         """
-        env.reset_task(is_evaluation=is_evaluation)
+        env.reset_task(is_evaluation=is_evaluation, generalized=self.generalized, granularity=self.granularity)
         stats = []
         #====================================================================================#
         #                           ----------PROBLEM 1----------
@@ -377,27 +383,28 @@ class Agent(object):
                 # first meta ob has only the observation
                 # set a, r, d to zero, construct first meta observation in meta_obs
                 # YOUR CODE HERE
-
+                meta_obs[steps + self.history] = 0
+                meta_obs[steps + self.history, :self.ob_dim] = ob
                 steps += 1
 
             # index into the meta_obs array to get the window that ends with the current timestep
             # please name the windowed observation `in_` for compatibilty with the code that adds to the replay buffer (lines 418, 420)
             # YOUR CODE HERE
-
+            in_ = meta_obs[steps:steps + self.history].copy()
             hidden = np.zeros((1, self.gru_size), dtype=np.float32)
 
             # get action from the policy
             # YOUR CODE HERE
-
+            ac = self.sess.run(self.sy_sampled_ac, feed_dict={self.sy_ob_no: in_[None], self.sy_hidden: hidden})[0]
             # step the environment
             # YOUR CODE HERE
-
+            ob, rew, done, info = env.step(ac)
             ep_steps += 1
 
             done = bool(done) or ep_steps == self.max_path_length
             # construct the meta-observation and add it to meta_obs
             # YOUR CODE HERE
-
+            meta_obs[steps + self.history] = np.concatenate([ob, ac, [rew, done]])
             rewards.append(rew)
             steps += 1
 
@@ -599,6 +606,8 @@ def train_PG(
         num_tasks,
         l2reg,
         recurrent,
+        generalized,
+        granularity
         ):
 
     start = time.time()
@@ -653,6 +662,8 @@ def train_PG(
         'animate': animate,
         'max_path_length': max_path_length,
         'min_timesteps_per_batch': min_timesteps_per_batch,
+        'generalized': generalized,
+        'granularity': granularity
     }
 
     estimate_return_args = {
@@ -788,6 +799,8 @@ def main():
     parser.add_argument('--history', '-ho', type=int, default=1)
     parser.add_argument('--l2reg', '-reg', action='store_true')
     parser.add_argument('--recurrent', '-rec', action='store_true')
+    parser.add_argument('--generalized', action='store_true')
+    parser.add_argument('--granularity', type=int, default=1)
     args = parser.parse_args()
 
     if not(os.path.exists('data')):
@@ -829,6 +842,8 @@ def main():
                 num_tasks=args.num_tasks,
                 l2reg=args.l2reg,
                 recurrent=args.recurrent,
+                generalized=args.generalized,
+                granularity=args.granularity
                 )
         # # Awkward hacky process runs, because Tensorflow does not like
         # # repeatedly calling train_PG in the same thread.

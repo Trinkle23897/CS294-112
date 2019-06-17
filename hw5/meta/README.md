@@ -10,3 +10,7 @@ Dependencies:
  * Box2D==2.3.2
 
 See the [HW5c PDF](http://rail.eecs.berkeley.edu/deeprlcourse/static/homeworks/hw5c.pdf) for further instructions.
+
+# Run experiment
+
+`./run.sh`

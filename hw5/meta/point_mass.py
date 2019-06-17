@@ -15,7 +15,7 @@ class PointEnv(Env):
         self.observation_space = spaces.Box(low=-np.inf, high=np.inf, shape=(2,))
         self.action_space = spaces.Box(low=-0.1, high=0.1, shape=(2,))
 
-    def reset_task(self, is_evaluation=False):
+    def reset_task(self, is_evaluation=False, generalized=False, granularity=1):
         '''
         sample a new task randomly
 
@@ -27,8 +27,19 @@ class PointEnv(Env):
         #                           ----------PROBLEM 3----------
         #====================================================================================#
         # YOUR CODE HERE
-        x = np.random.uniform(-10, 10)
-        y = np.random.uniform(-10, 10)
+        if generalized: 
+            assert granularity in [1, 2, 4, 5, 10], 'granularity must in [1, 2, 4, 5, 10].'
+            rand_size = 20 // granularity
+            space = np.zeros((rand_size, rand_size))
+            space[1::2, ::2] = 1
+            space[::2, 1::2] = 1
+            goals = np.array(np.where(space == is_evaluation)).T
+            goal = goals[np.random.randint(goals.shape[0])] * granularity
+            x = np.random.uniform(goal[0], goal[0] + granularity) - 10
+            y = np.random.uniform(goal[1], goal[1] + granularity) - 10
+        else:
+            x = np.random.uniform(-10, 10)
+            y = np.random.uniform(-10, 10)
         self._goal = np.array([x, y])
 
     def reset(self):
