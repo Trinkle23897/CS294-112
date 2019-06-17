@@ -77,7 +77,7 @@ def build_rnn(x, h, output_size, scope, n_layers, size, activation=tf.tanh, outp
     # YOUR CODE HERE
     mlp = build_mlp(x, output_size, scope, n_layers, size, activation, output_activation, regularizer)
     gru = tf.nn.rnn_cell.GRUCell(output_size, activation=activation)
-    x, h = tf.nn.dynamic_rnn(gru, initial_state=h)
+    x, h = tf.nn.dynamic_rnn(gru, x, initial_state=h)
     return x[:, -1], h
 
 def build_policy(x, h, output_size, scope, n_layers, size, gru_size, recurrent=True, activation=tf.tanh, output_activation=None):
